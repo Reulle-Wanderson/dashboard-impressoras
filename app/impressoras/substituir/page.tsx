@@ -31,7 +31,6 @@ export default function SubstituirImpressora() {
   const [motivo, setMotivo] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [testandoSNMP, setTestandoSNMP] = useState(false);
 
   const router = useRouter();
 
@@ -59,35 +58,6 @@ export default function SubstituirImpressora() {
       /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
 
     return regex.test(ip);
-  }
-
-  // 🔍 Testar SNMP antes
-  async function testarSNMP() {
-    if (!validarIp(novoIp)) {
-      toast.error("Informe um IP válido");
-      return;
-    }
-
-    setTestandoSNMP(true);
-
-    try {
-      const resp = await fetch("/api/testar-snmp", {
-        method: "POST",
-        body: JSON.stringify({ ip: novoIp }),
-      });
-
-      const result = await resp.json();
-
-      if (result.success) {
-        toast.success(`SNMP OK — páginas atuais: ${result.paginas}`);
-      } else {
-        toast.error(result.error ?? "SNMP não respondeu");
-      }
-    } catch {
-      toast.error("Falha ao testar SNMP");
-    }
-
-    setTestandoSNMP(false);
   }
 
   async function substituirImpressora() {
@@ -142,7 +112,7 @@ export default function SubstituirImpressora() {
       return;
     }
 
-    // registrar motivo futuramente:
+    // registrar motivo futuramente
     console.log("Motivo registrado:", motivo);
 
     setLoading(false);
@@ -199,16 +169,6 @@ export default function SubstituirImpressora() {
             />
           </div>
 
-          {/* testar snmp */}
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={testarSNMP}
-            disabled={testandoSNMP}
-          >
-            {testandoSNMP ? "Testando SNMP..." : "Testar SNMP"}
-          </Button>
-
           {/* botão confirmar */}
           <Button
             className="w-full"
@@ -228,8 +188,8 @@ export default function SubstituirImpressora() {
           </DialogHeader>
 
           <p>
-            A impressora antiga será desativada e uma nova será cadastrada no
-            sistema. Deseja continuar?
+            A impressora antiga será desativada e uma nova será cadastrada no sistema.
+            Deseja continuar?
           </p>
 
           <DialogFooter>
