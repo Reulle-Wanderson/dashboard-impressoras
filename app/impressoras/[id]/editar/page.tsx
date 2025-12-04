@@ -1,5 +1,8 @@
 "use client";
 
+import { isProd } from "@/lib/isProd";
+import AuthRestrito from "@/app/auth/page";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +13,11 @@ interface Props {
 }
 
 export default function EditarImpressora({ params }: Props) {
+  // 🔒 BLOQUEIO DE PRODUÇÃO (VERCEL)
+  if (isProd()) {
+    return <AuthRestrito />;
+  }
+
   const router = useRouter();
 
   const [id, setId] = useState<string | null>(null);
@@ -53,7 +61,6 @@ export default function EditarImpressora({ params }: Props) {
       setIp(data.ip ?? "");
       setSetor(data.setor ?? "");
       setDesconto(data.desconto_borrao ?? 0);
-
 
       setLoading(false);
     }
