@@ -1,5 +1,8 @@
 "use client";
 
+import { isProd } from "@/lib/isProd";
+import AuthRestrito from "@/app/auth/page";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -24,6 +27,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export default function SubstituirImpressora() {
+  // 🔒 BLOQUEIO DE PRODUÇÃO (VERCEL)
+  if (isProd()) {
+    return <AuthRestrito />;
+  }
+
   const [impressoras, setImpressoras] = useState<any[]>([]);
   const [selecionada, setSelecionada] = useState("");
   const [novoNome, setNovoNome] = useState("");
@@ -111,9 +119,6 @@ export default function SubstituirImpressora() {
       setLoading(false);
       return;
     }
-
-    // registrar motivo futuramente
-    console.log("Motivo registrado:", motivo);
 
     setLoading(false);
     toast.success("Impressora substituída com sucesso ✅");
