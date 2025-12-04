@@ -3,7 +3,7 @@ import TabelaHistorico from "@/components/TabelaHistorico";
 
 interface Registro {
   data: string;
-  paginas: number;
+  paginas: number; // agora será o delta
   printer_id: {
     id: string | null;
     nome: string | null;

@@ -1,5 +1,9 @@
-import { supabase } from "@/lib/supabase"; 
+import { supabase } from "@/lib/supabase";
+import { calcularTotalPaginas } from "@/lib/calcularTotalPaginas";
 
+// ==============================
+// TYPES
+// ==============================
 type CompraPapel = {
   quantidade_folhas: number;
   valor_total: number;
@@ -14,17 +18,22 @@ type RegistroConsumo = {
     nome: string;
     setor: string | null;
     desconto_borrao: number | null;
-  } | null; // ← Correção importante
+  } | null;
 };
 
+// ==============================
+// MAIN PAGE
+// ==============================
 export default async function FinanceiroHome() {
-  // 🔹 Data de início do mês
+  // 🔹 Início do mês
   const agora = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1)
     .toISOString()
     .split("T")[0];
 
-  // 🔹 Compras de papel
+  // ==============================================
+  // 🔹 COMPRAS DE PAPEL NO MÊS
+  // ==============================================
   const { data: compras } = await supabase
     .from("compras_papel")
     .select("quantidade_folhas, valor_total, data")
@@ -36,7 +45,6 @@ export default async function FinanceiroHome() {
     (s, c) => s + c.quantidade_folhas,
     0
   );
-
   const totalGastoMes = comprasCast.reduce(
     (s, c) => s + Number(c.valor_total),
     0
@@ -45,7 +53,9 @@ export default async function FinanceiroHome() {
   const custoPorFolha =
     totalFolhasCompradas > 0 ? totalGastoMes / totalFolhasCompradas : 0;
 
-  // 🔹 Consumo das impressoras no mês + JOIN com tabela printers
+  // ==============================================
+  // 🔹 CONSUMO DAS IMPRESSORAS
+  // ==============================================
   const { data: registros } = await supabase
     .from("consumo_impressoras")
     .select(`
@@ -59,52 +69,55 @@ export default async function FinanceiroHome() {
       )
     `)
     .gte("data", inicioMes)
+    .order("printer_id", { ascending: true })
     .order("data", { ascending: true });
 
-  const registrosCast: RegistroConsumo[] = registros?.map((r) => ({
-  printer_id: r.printer_id,
-  data: r.data,
-  paginas: r.paginas,
-  printers: Array.isArray(r.printers) ? r.printers[0] : r.printers
-})) ?? [];
+  const registrosCast: RegistroConsumo[] =
+    registros?.map((r) => ({
+      printer_id: r.printer_id,
+      data: r.data,
+      paginas: r.paginas,
+      printers: Array.isArray(r.printers) ? r.printers[0] : r.printers,
+    })) ?? [];
 
-
-  // 🔹 Agrupar por impressora
+  // ==============================================
+  // 🔹 AGRUPAR POR IMPRESSORA
+  // ==============================================
   const porImpressora = new Map<
     string,
     {
       nome: string;
       setor: string | null;
       desconto: number;
-      primeiro: number;
-      ultimo: number;
+      registros: { data: string; paginas: number }[];
     }
   >();
 
   for (const r of registrosCast) {
-    const atual = porImpressora.get(r.printer_id);
-
     const desconto = r.printers?.desconto_borrao ?? 0;
 
-    if (!atual) {
+    if (!porImpressora.has(r.printer_id)) {
       porImpressora.set(r.printer_id, {
         nome: r.printers?.nome ?? "Sem nome",
         setor: r.printers?.setor ?? "Sem setor",
         desconto,
-        primeiro: r.paginas,
-        ultimo: r.paginas,
+        registros: [{ data: r.data, paginas: r.paginas }],
       });
     } else {
-      atual.ultimo = r.paginas;
+      porImpressora.get(r.printer_id)!.registros.push({
+        data: r.data,
+        paginas: r.paginas,
+      });
     }
   }
 
-  // 🔹 Transformar em lista + aplicar desconto
+  // ==============================================
+  // 🔹 CÁLCULO FINAL — usando calcularTotalPaginas()
+  // ==============================================
   const rankingImpressoras = Array.from(porImpressora.entries())
     .map(([id, info]) => {
-      const paginasMes = Math.max(info.ultimo - info.primeiro, 0);
+      const paginasMes = calcularTotalPaginas(info.registros); // <<-- AQUI
 
-      // 🟡 DESCONTO DE BORRÃO (%)
       const paginasValidas = Math.floor(
         paginasMes * (1 - info.desconto / 100)
       );
@@ -123,18 +136,21 @@ export default async function FinanceiroHome() {
     })
     .sort((a, b) => b.custoMes - a.custoMes);
 
-  // 🔹 Totais gerais
+  // ==============================================
+  // 🔹 TOTALIZADORES
+  // ==============================================
   const totalImpressoMes = rankingImpressoras.reduce(
     (s, imp) => s + imp.paginasMes,
     0
   );
-
   const totalCustoReal = rankingImpressoras.reduce(
     (s, imp) => s + imp.custoMes,
     0
   );
 
-  // 🔹 Comparação por setor
+  // ==============================================
+  // 🔹 POR SETOR
+  // ==============================================
   const porSetor = new Map<
     string,
     { paginas: number; paginasValidas: number; custo: number }
@@ -164,20 +180,18 @@ export default async function FinanceiroHome() {
     })
   );
 
-  // -------------------------------------------------------------------
+  // ==============================================
   // RENDERIZAÇÃO
-  // -------------------------------------------------------------------
+  // ==============================================
   return (
     <main className="p-8 space-y-10">
       <h1 className="text-3xl font-bold mb-4">Financeiro</h1>
 
-      {/* Cards gerais */}
+      {/* CARDS GERAIS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded shadow">
           <p className="text-sm text-gray-500">Custo médio por página</p>
-          <p className="text-2xl font-bold">
-            R$ {custoPorFolha.toFixed(4)}
-          </p>
+          <p className="text-2xl font-bold">R$ {custoPorFolha.toFixed(4)}</p>
         </div>
 
         <div className="bg-white p-6 rounded shadow">
@@ -187,13 +201,11 @@ export default async function FinanceiroHome() {
 
         <div className="bg-white p-6 rounded shadow">
           <p className="text-sm text-gray-500">Custo total estimado</p>
-          <p className="text-2xl font-bold">
-            R$ {totalCustoReal.toFixed(2)}
-          </p>
+          <p className="text-2xl font-bold">R$ {totalCustoReal.toFixed(2)}</p>
         </div>
       </div>
 
-      {/* Botão registrar compra */}
+      {/* BOTÃO COMPRA */}
       <a
         href="/financeiro/papel/nova"
         className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 inline-block"
@@ -201,7 +213,7 @@ export default async function FinanceiroHome() {
         Registrar compra de papel
       </a>
 
-      {/* Ranking Impressoras */}
+      {/* RANKING IMPRESSORAS */}
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Ranking de impressoras por custo</h2>
 
@@ -234,7 +246,7 @@ export default async function FinanceiroHome() {
         </table>
       </section>
 
-      {/* Comparação por Setor */}
+      {/* SETORES */}
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Comparação por setor</h2>
 

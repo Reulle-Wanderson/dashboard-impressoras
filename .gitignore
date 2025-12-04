@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 # next-env.d.ts  ❌ REMOVIDO — não ignore mais
+
+coletar_impressoras.bat
+Servidor Impressoras.exe
