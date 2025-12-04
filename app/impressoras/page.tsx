@@ -27,6 +27,7 @@ export default async function ListaImpressoras() {
               <th className="border p-2 text-left">Criada em</th>
             </tr>
           </thead>
+
           <tbody>
             {printers?.map((printer) => (
               <tr key={printer.id}>
