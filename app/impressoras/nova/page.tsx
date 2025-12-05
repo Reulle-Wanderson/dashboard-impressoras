@@ -1,11 +1,19 @@
 "use client";
 
+import { isProd } from "@/lib/isProd";
+import AuthRestrito from "@/app/auth/page";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export default function NovaImpressora() {
+export default function NovaImpressoraPage() {
+  // 🔒 BLOQUEIO PARA PRODUÇÃO (VERCEL)
+  if (isProd()) {
+    return <AuthRestrito />;
+  }
+
   const router = useRouter();
 
   const [nome, setNome] = useState("");

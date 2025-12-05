@@ -57,7 +57,6 @@ export async function obterResumoFinanceiro() {
     .lt("data", inicioMes)
     .order("data", { ascending: false });
 
-  // último registro anterior ao mês por impressora
   const referenciaMesAnterior = new Map<string, number>();
 
   for (const r of registrosAntes ?? []) {
@@ -98,7 +97,7 @@ export async function obterResumoFinanceiro() {
   );
 
   // ======================================================================
-  // 5️⃣ AGRUPA POR SETOR
+  // 5️⃣ AGRUPA POR SETOR (CORRIGIDO)
   // ======================================================================
   const porSetor = new Map<
     string,
@@ -121,8 +120,11 @@ export async function obterResumoFinanceiro() {
     porSetor.set(setor, atual);
   });
 
+  // ✅ Agora sim: ordenar apenas UMA vez, fora do loop
+  rankingImpressoras.sort((a, b) => b.paginasMes - a.paginasMes);
+
   // ======================================================================
-  // 6️⃣ RETORNO FINAL (pronto para a página)
+  // 6️⃣ RETORNO FINAL
   // ======================================================================
   return {
     custoPorFolha,
