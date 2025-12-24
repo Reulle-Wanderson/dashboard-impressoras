@@ -212,13 +212,17 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
       </div>
 
       {/* Tabela */}
-      <TabelaHistorico
-        registros={diario.map((d) => ({
-          data: d.data,
-          paginas: d.consumo,
-          printer_id: { id: impressora.id, nome: impressora.nome },
-        }))}
-      />
+      <div className="bg-white rounded shadow max-h-[420px] overflow-y-auto">
+        <TabelaHistorico
+          registros={diario.map((d) => ({
+            data: d.data,
+            paginas: d.consumo,
+            printer_id: { id: impressora.id, nome: impressora.nome },
+          }))}
+        />
+      </div>
+
+
 
       {/* Borrão */}
       <EditarDescontoBorrao

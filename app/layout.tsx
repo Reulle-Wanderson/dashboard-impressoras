@@ -31,33 +31,46 @@ export default function RootLayout({
       >
         {/* Navbar */}
         <nav className="w-full bg-white shadow p-4 flex gap-6 mb-6">
-          <Link href="/" className="font-medium hover:underline">
+          <Link href="/" className="font-medium text-gray-700 hover:underline">
             Impressoras
           </Link>
 
-          <Link href="/impressoras/nova" className="font-medium hover:underline">
+          <Link
+            href="/impressoras/nova"
+            className="font-medium text-gray-700 hover:underline"
+          >
             Cadastrar Impressora
           </Link>
 
-          <Link href="/historico" className="font-medium hover:underline">
+          <Link
+            href="/historico"
+            className="font-medium text-gray-700 hover:underline"
+          >
             Histórico
           </Link>
 
-          <Link href="/dashboard" className="font-medium hover:underline">
+          <Link
+            href="/dashboard"
+            className="font-medium text-gray-700 hover:underline"
+          >
             Dashboard
           </Link>
 
           <Link
             href="/financeiro"
-            className="font-medium hover:underline text-blue-600 font-semibold"
+            className="font-semibold text-blue-600 hover:underline"
           >
             Financeiro
           </Link>
 
-          <Link href="/impressoras/substituir" className="font-medium hover:underline">
+          <Link
+            href="/impressoras/substituir"
+            className="font-medium text-gray-700 hover:underline"
+          >
             Substituir Impressora
           </Link>
         </nav>
+
 
         {/* Conteúdo */}
         <div className="max-w-6xl mx-auto px-4">{children}</div>
