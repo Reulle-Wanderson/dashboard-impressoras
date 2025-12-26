@@ -7,19 +7,34 @@ import TabelaHistorico from "@/components/TabelaHistorico";
 // ----------------------------------------
 // TIPOS
 // ----------------------------------------
-interface RegistroBruto {
+type PrinterJoin =
+  | { id: string; nome: string }
+  | { id: string; nome: string }[]
+  | null;
+
+interface RegistroSupabase {
   data: string;
   paginas: number;
-  printer_id: {
-    id: string;
-    nome: string;
-  };
+  printer_id: PrinterJoin;
 }
 
 interface RegistroConsumo {
   data: string;
-  paginas: number; // consumo (delta)
+  paginas: number; // delta
   printer: string;
+}
+
+// ----------------------------------------
+// HELPERS
+// ----------------------------------------
+function extrairNomeImpressora(printer: PrinterJoin): string | null {
+  if (!printer) return null;
+
+  if (Array.isArray(printer)) {
+    return printer[0]?.nome ?? null;
+  }
+
+  return printer.nome ?? null;
 }
 
 // ----------------------------------------
@@ -52,7 +67,6 @@ export default function HistoricoPage() {
           )
         `
         )
-        .order("printer_id", { ascending: true })
         .order("data", { ascending: true });
 
       if (error || !data) {
@@ -60,13 +74,16 @@ export default function HistoricoPage() {
         return;
       }
 
-      const porImpressora: Record<string, RegistroBruto[]> = {};
+      const porImpressora: Record<string, RegistroSupabase[]> = {};
 
-      data.forEach((r: RegistroBruto) => {
-        const nome = r.printer_id?.nome;
+      (data as RegistroSupabase[]).forEach((r) => {
+        const nome = extrairNomeImpressora(r.printer_id);
         if (!nome) return;
 
-        if (!porImpressora[nome]) porImpressora[nome] = [];
+        if (!porImpressora[nome]) {
+          porImpressora[nome] = [];
+        }
+
         porImpressora[nome].push(r);
       });
 
@@ -97,12 +114,10 @@ export default function HistoricoPage() {
   }, []);
 
   // ----------------------------------------
-  // LISTA DE IMPRESSORAS
+  // LISTA DE IMPRESSORAS (VOLTA A FUNCIONAR)
   // ----------------------------------------
   const listaImpressoras = useMemo(() => {
-    const set = new Set<string>();
-    registros.forEach((r) => set.add(r.printer));
-    return Array.from(set).sort();
+    return Array.from(new Set(registros.map((r) => r.printer))).sort();
   }, [registros]);
 
   // ----------------------------------------
@@ -152,9 +167,6 @@ export default function HistoricoPage() {
     impressoraSelecionada,
   ]);
 
-  // ----------------------------------------
-  // TOTAL
-  // ----------------------------------------
   const totalPeriodo = filtrado.reduce((s, r) => s + r.paginas, 0);
 
   if (loading) return <div className="p-6">Carregando...</div>;
@@ -166,10 +178,7 @@ export default function HistoricoPage() {
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Histórico</h1>
 
-      {/* Filtros */}
       <div className="bg-white p-4 rounded shadow space-y-4">
-        <h2 className="font-semibold">Filtro de período</h2>
-
         <div className="flex flex-wrap gap-4">
           <select
             className="border p-2 rounded"
@@ -215,15 +224,11 @@ export default function HistoricoPage() {
 
         <p className="text-gray-700">
           Total no período:{" "}
-          <span className="font-bold">
-            {totalPeriodo.toLocaleString("pt-BR")}
-          </span>{" "}
-          páginas
+          <strong>{totalPeriodo.toLocaleString("pt-BR")}</strong> páginas
         </p>
       </div>
 
-      {/* Tabela com rolagem */}
-      <div className="bg-white rounded shadow max-h-[520px] overflow-y-auto">
+      <div className="bg-white rounded shadow max-h-130 overflow-y-auto">
         <TabelaHistorico
           registros={filtrado.map((r) => ({
             data: r.data,
