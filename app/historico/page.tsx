@@ -4,47 +4,43 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import TabelaHistorico from "@/components/TabelaHistorico";
 
-interface Registro {
+// ----------------------------------------
+// TIPOS
+// ----------------------------------------
+interface RegistroBruto {
   data: string;
   paginas: number;
   printer_id: {
-    id: string | null;
-    nome: string | null;
+    id: string;
+    nome: string;
   };
 }
 
-export default function Historico() {
-  const [registros, setRegistros] = useState<Registro[]>([]);
-  const [loading, setLoading] = useState(false);
+interface RegistroConsumo {
+  data: string;
+  paginas: number; // consumo (delta)
+  printer: string;
+}
+
+// ----------------------------------------
+// COMPONENTE
+// ----------------------------------------
+export default function HistoricoPage() {
+  const [registros, setRegistros] = useState<RegistroConsumo[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // filtros
-  const [periodo, setPeriodo] = useState("30");
+  const [tipoFiltro, setTipoFiltro] = useState("30");
   const [inicioCustom, setInicioCustom] = useState("");
   const [fimCustom, setFimCustom] = useState("");
+  const [impressoraSelecionada, setImpressoraSelecionada] = useState("todas");
 
-  // buscar dados apenas quando filtro mudar
+  // ----------------------------------------
+  // BUSCAR + CALCULAR DELTA
+  // ----------------------------------------
   useEffect(() => {
     async function carregar() {
-      setLoading(true);
-
-      let inicio: Date | null = null;
-      let fim = new Date();
-
-      if (periodo === "7") {
-        inicio = new Date();
-        inicio.setDate(inicio.getDate() - 7);
-      } else if (periodo === "30") {
-        inicio = new Date();
-        inicio.setDate(inicio.getDate() - 30);
-      } else if (periodo === "mes") {
-        const hoje = new Date();
-        inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      } else if (periodo === "custom") {
-        if (inicioCustom) inicio = new Date(inicioCustom);
-        if (fimCustom) fim = new Date(fimCustom);
-      }
-
-      let query = supabase
+      const { data, error } = await supabase
         .from("consumo_impressoras")
         .select(
           `
@@ -56,42 +52,116 @@ export default function Historico() {
           )
         `
         )
+        .order("printer_id", { ascending: true })
         .order("data", { ascending: true });
 
-      if (inicio) {
-        query = query.gte("data", inicio.toISOString().slice(0, 10));
+      if (error || !data) {
+        setLoading(false);
+        return;
       }
 
-      if (fim) {
-        query = query.lte("data", fim.toISOString().slice(0, 10));
-      }
+      const porImpressora: Record<string, RegistroBruto[]> = {};
 
-      const { data, error } = await query;
+      data.forEach((r: RegistroBruto) => {
+        const nome = r.printer_id?.nome;
+        if (!nome) return;
 
-      if (!error && data) {
-        const formatado: Registro[] = data.map((r: any) => ({
-          data: r.data,
-          paginas: r.paginas,
-          printer_id: {
-            id: r.printer_id?.id ?? null,
-            nome: r.printer_id?.nome ?? null,
-          },
-        }));
+        if (!porImpressora[nome]) porImpressora[nome] = [];
+        porImpressora[nome].push(r);
+      });
 
-        setRegistros(formatado);
-      }
+      const consumoFinal: RegistroConsumo[] = [];
 
+      Object.entries(porImpressora).forEach(([printer, regs]) => {
+        for (let i = 1; i < regs.length; i++) {
+          const atual = regs[i];
+          const anterior = regs[i - 1];
+
+          const delta = atual.paginas - anterior.paginas;
+
+          if (delta > 0) {
+            consumoFinal.push({
+              data: atual.data,
+              paginas: delta,
+              printer,
+            });
+          }
+        }
+      });
+
+      setRegistros(consumoFinal);
       setLoading(false);
     }
 
     carregar();
-  }, [periodo, inicioCustom, fimCustom]);
+  }, []);
 
-  const totalPaginas = useMemo(
-    () => registros.reduce((s, r) => s + r.paginas, 0),
-    [registros]
-  );
+  // ----------------------------------------
+  // LISTA DE IMPRESSORAS
+  // ----------------------------------------
+  const listaImpressoras = useMemo(() => {
+    const set = new Set<string>();
+    registros.forEach((r) => set.add(r.printer));
+    return Array.from(set).sort();
+  }, [registros]);
 
+  // ----------------------------------------
+  // FILTRO
+  // ----------------------------------------
+  const filtrado = useMemo(() => {
+    let inicio: Date | null = null;
+    let fim = new Date();
+
+    if (tipoFiltro === "7") {
+      inicio = new Date();
+      inicio.setDate(inicio.getDate() - 7);
+    }
+
+    if (tipoFiltro === "30") {
+      inicio = new Date();
+      inicio.setDate(inicio.getDate() - 30);
+    }
+
+    if (tipoFiltro === "mes") {
+      const hoje = new Date();
+      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    }
+
+    if (tipoFiltro === "custom") {
+      if (inicioCustom) inicio = new Date(inicioCustom);
+      if (fimCustom) fim = new Date(fimCustom);
+    }
+
+    return registros.filter((r) => {
+      const dataR = new Date(r.data);
+
+      const passaPeriodo =
+        (!inicio || dataR >= inicio) && dataR <= fim;
+
+      const passaImpressora =
+        impressoraSelecionada === "todas" ||
+        r.printer === impressoraSelecionada;
+
+      return passaPeriodo && passaImpressora;
+    });
+  }, [
+    registros,
+    tipoFiltro,
+    inicioCustom,
+    fimCustom,
+    impressoraSelecionada,
+  ]);
+
+  // ----------------------------------------
+  // TOTAL
+  // ----------------------------------------
+  const totalPeriodo = filtrado.reduce((s, r) => s + r.paginas, 0);
+
+  if (loading) return <div className="p-6">Carregando...</div>;
+
+  // ----------------------------------------
+  // JSX
+  // ----------------------------------------
   return (
     <main className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Histórico</h1>
@@ -100,11 +170,11 @@ export default function Historico() {
       <div className="bg-white p-4 rounded shadow space-y-4">
         <h2 className="font-semibold">Filtro de período</h2>
 
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-wrap gap-4">
           <select
-            value={periodo}
-            onChange={(e) => setPeriodo(e.target.value)}
             className="border p-2 rounded"
+            value={tipoFiltro}
+            onChange={(e) => setTipoFiltro(e.target.value)}
           >
             <option value="7">Últimos 7 dias</option>
             <option value="30">Últimos 30 dias</option>
@@ -112,7 +182,20 @@ export default function Historico() {
             <option value="custom">Personalizado</option>
           </select>
 
-          {periodo === "custom" && (
+          <select
+            className="border p-2 rounded"
+            value={impressoraSelecionada}
+            onChange={(e) => setImpressoraSelecionada(e.target.value)}
+          >
+            <option value="todas">Todas as impressoras</option>
+            {listaImpressoras.map((nome) => (
+              <option key={nome} value={nome}>
+                {nome}
+              </option>
+            ))}
+          </select>
+
+          {tipoFiltro === "custom" && (
             <>
               <input
                 type="date"
@@ -133,19 +216,24 @@ export default function Historico() {
         <p className="text-gray-700">
           Total no período:{" "}
           <span className="font-bold">
-            {totalPaginas.toLocaleString("pt-BR")}
+            {totalPeriodo.toLocaleString("pt-BR")}
           </span>{" "}
           páginas
         </p>
       </div>
 
-      {/* Tabela */}
-      <div className="bg-white rounded shadow max-h-[500px] overflow-y-auto">
-        {loading ? (
-          <p className="p-4">Carregando...</p>
-        ) : (
-          <TabelaHistorico registros={registros} />
-        )}
+      {/* Tabela com rolagem */}
+      <div className="bg-white rounded shadow max-h-[520px] overflow-y-auto">
+        <TabelaHistorico
+          registros={filtrado.map((r) => ({
+            data: r.data,
+            paginas: r.paginas,
+            printer_id: {
+              id: null,
+              nome: r.printer,
+            },
+          }))}
+        />
       </div>
     </main>
   );
