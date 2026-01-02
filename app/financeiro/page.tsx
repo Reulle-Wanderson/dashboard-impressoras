@@ -106,6 +106,18 @@ export default async function FinanceiroHome({
       </div>
 
       {/* =========================
+          AÇÃO – COMPRA DE PAPEL
+      ========================= */}
+      <div>
+        <a
+          href="/financeiro/papel/nova"
+          className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 inline-block"
+        >
+          Registrar compra de papel
+        </a>
+      </div>
+
+      {/* =========================
           RANKING IMPRESSORAS
       ========================= */}
       <section className="space-y-3">
