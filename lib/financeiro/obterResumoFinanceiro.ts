@@ -3,21 +3,26 @@ import { normalizarRegistros } from "@/lib/financeiro/normalizarRegistros";
 import { calcularTotalPaginasPorMes } from "@/lib/financeiro/calcularTotalPaginas";
 
 // ======================================================================
-//  OBTÉM RESUMO FINANCEIRO (MODELO PROFISSIONAL)
+//  OBTÉM RESUMO FINANCEIRO (COM PERÍODO DINÂMICO)
 // ======================================================================
-export async function obterResumoFinanceiro() {
-  const agora = new Date();
-  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
 
+interface FiltroFinanceiro {
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string;    // YYYY-MM-DD
+}
+
+export async function obterResumoFinanceiro({
+  dataInicio,
+  dataFim,
+}: FiltroFinanceiro) {
   // ======================================================================
-  // 1️⃣ COMPRAS DE PAPEL DO MÊS
+  // 1️⃣ COMPRAS DE PAPEL NO PERÍODO
   // ======================================================================
   const { data: compras } = await supabase
     .from("compras_papel")
     .select("quantidade_folhas, valor_total")
-    .gte("data", inicioMes);
+    .gte("data", dataInicio)
+    .lte("data", dataFim);
 
   const totalFolhas =
     compras?.reduce((s, c) => s + c.quantidade_folhas, 0) ?? 0;
@@ -28,7 +33,7 @@ export async function obterResumoFinanceiro() {
   const custoPorFolha = totalFolhas > 0 ? totalGasto / totalFolhas : 0;
 
   // ======================================================================
-  // 2️⃣ REGISTROS DE CONSUMO DENTRO DO MÊS
+  // 2️⃣ REGISTROS DE CONSUMO DENTRO DO PERÍODO
   // ======================================================================
   const { data: registrosMes } = await supabase
     .from("consumo_impressoras")
@@ -42,19 +47,20 @@ export async function obterResumoFinanceiro() {
         desconto_borrao
       )
     `)
-    .gte("data", inicioMes)
+    .gte("data", dataInicio)
+    .lte("data", dataFim)
     .order("printer_id")
     .order("data");
 
   const registrosNormalizados = normalizarRegistros(registrosMes ?? []);
 
   // ======================================================================
-  // 3️⃣ OBTÉM O ÚLTIMO REGISTRO *ANTES* DO MÊS (referência SNMP)
+  // 3️⃣ ÚLTIMO REGISTRO ANTES DO PERÍODO (REFERÊNCIA SNMP)
   // ======================================================================
   const { data: registrosAntes } = await supabase
     .from("consumo_impressoras")
     .select("printer_id, paginas, data")
-    .lt("data", inicioMes)
+    .lt("data", dataInicio)
     .order("data", { ascending: false });
 
   const referenciaMesAnterior = new Map<string, number>();
@@ -97,7 +103,7 @@ export async function obterResumoFinanceiro() {
   );
 
   // ======================================================================
-  // 5️⃣ AGRUPA POR SETOR (CORRIGIDO)
+  // 5️⃣ AGRUPAMENTO POR SETOR
   // ======================================================================
   const porSetor = new Map<
     string,
@@ -120,11 +126,13 @@ export async function obterResumoFinanceiro() {
     porSetor.set(setor, atual);
   });
 
-  // ✅ Agora sim: ordenar apenas UMA vez, fora do loop
+  // ======================================================================
+  // 6️⃣ ORDENAÇÃO FINAL
+  // ======================================================================
   rankingImpressoras.sort((a, b) => b.paginasMes - a.paginasMes);
 
   // ======================================================================
-  // 6️⃣ RETORNO FINAL
+  // 7️⃣ RETORNO FINAL
   // ======================================================================
   return {
     custoPorFolha,
@@ -132,7 +140,10 @@ export async function obterResumoFinanceiro() {
       (s, i) => s + i.paginasMes,
       0
     ),
-    totalCustoReal: rankingImpressoras.reduce((s, i) => s + i.custoMes, 0),
+    totalCustoReal: rankingImpressoras.reduce(
+      (s, i) => s + i.custoMes,
+      0
+    ),
     rankingImpressoras,
     rankingSetores: [...porSetor.entries()].map(([setor, dados]) => ({
       setor,
