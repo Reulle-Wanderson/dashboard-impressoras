@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 
-export default function FilterBar({ onApply }: { onApply: (f: any) => void }) {
+export default function FilterBar({
+  onApply,
+}: {
+  onApply: (f: {
+    printer: string | null;
+    dataInicio: string | null;
+    dataFim: string | null;
+  }) => void;
+}) {
   const [printer, setPrinter] = useState("");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
@@ -16,46 +24,70 @@ export default function FilterBar({ onApply }: { onApply: (f: any) => void }) {
   }
 
   return (
-    <div className="flex gap-4 mb-6 bg-gray-100 p-4 rounded-lg">
-      {/* Impressora */}
+    <section className="bg-white p-6 rounded-lg shadow space-y-4">
+      {/* =========================
+          TÍTULO
+      ========================= */}
       <div>
-        <label className="text-sm">ID da Impressora</label>
-        <input
-          className="border p-2 rounded"
-          value={printer}
-          onChange={(e) => setPrinter(e.target.value)}
-          placeholder="Opcional"
-        />
+        <h3 className="text-lg font-semibold text-gray-800">
+          Filtros
+        </h3>
+        <p className="text-sm text-gray-500">
+          Refine os dados exibidos
+        </p>
       </div>
 
-      {/* Data início */}
-      <div>
-        <label className="text-sm">Data início</label>
-        <input
-          type="date"
-          className="border p-2 rounded"
-          value={dataInicio}
-          onChange={(e) => setDataInicio(e.target.value)}
-        />
-      </div>
+      {/* =========================
+          CAMPOS
+      ========================= */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        {/* Impressora */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">
+            ID da impressora
+          </label>
+          <input
+            className="border rounded px-3 py-2"
+            value={printer}
+            onChange={(e) => setPrinter(e.target.value)}
+            placeholder="Opcional"
+          />
+        </div>
 
-      {/* Data fim */}
-      <div>
-        <label className="text-sm">Data fim</label>
-        <input
-          type="date"
-          className="border p-2 rounded"
-          value={dataFim}
-          onChange={(e) => setDataFim(e.target.value)}
-        />
-      </div>
+        {/* Data início */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">
+            Data início
+          </label>
+          <input
+            type="date"
+            className="border rounded px-3 py-2"
+            value={dataInicio}
+            onChange={(e) => setDataInicio(e.target.value)}
+          />
+        </div>
 
-      <button
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        onClick={apply}
-      >
-        Aplicar
-      </button>
-    </div>
+        {/* Data fim */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">
+            Data fim
+          </label>
+          <input
+            type="date"
+            className="border rounded px-3 py-2"
+            value={dataFim}
+            onChange={(e) => setDataFim(e.target.value)}
+          />
+        </div>
+
+        {/* Botão */}
+        <button
+          onClick={apply}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Aplicar filtros
+        </button>
+      </div>
+    </section>
   );
 }

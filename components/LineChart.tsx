@@ -14,6 +14,9 @@ import {
   TooltipItem,
 } from "chart.js";
 
+// ==================================================
+// REGISTRO DOS MÓDULOS
+// ==================================================
 ChartJS.register(
   LineElement,
   CategoryScale,
@@ -24,13 +27,32 @@ ChartJS.register(
   Filler
 );
 
+// ==================================================
+// PROPS
+// ==================================================
 interface LineChartProps {
   chartData: any;
   options?: ChartOptions<"line">;
+
+  // Layout
+  title?: string;
+  subtitle?: string;
+  height?: number; // altura em px
 }
 
-export default function LineChart({ chartData, options }: LineChartProps) {
-  // --------- OPÇÕES PADRÃO (CLIENT SIDE) ---------
+// ==================================================
+// COMPONENTE
+// ==================================================
+export default function LineChart({
+  chartData,
+  options,
+  title,
+  subtitle,
+  height = 360,
+}: LineChartProps) {
+  // ==================================================
+  // OPÇÕES PADRÃO (CLIENT ONLY)
+  // ==================================================
   const defaultOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -42,7 +64,7 @@ export default function LineChart({ chartData, options }: LineChartProps) {
         labels: {
           font: {
             size: 13,
-            weight: 600,
+            weight: 600, // ✅ number, não string
           },
         },
       },
@@ -52,10 +74,15 @@ export default function LineChart({ chartData, options }: LineChartProps) {
         backgroundColor: "rgba(0,0,0,0.85)",
         padding: 12,
         cornerRadius: 8,
-        titleFont: { size: 14, weight: 700 },
-        bodyFont: { size: 13, weight: 400 },
+        titleFont: {
+          size: 14,
+          weight: 700, // ✅ number, não string
+        },
+        bodyFont: {
+          size: 13,
+        },
 
-        // ⚠️ ESSA FUNÇÃO NÃO PODE IR NO SERVER! 
+        // ⚠️ callbacks só no client
         callbacks: {
           label: function (ctx: TooltipItem<"line">) {
             const valor = ctx.parsed.y ?? 0;
@@ -66,13 +93,21 @@ export default function LineChart({ chartData, options }: LineChartProps) {
     },
 
     scales: {
-      x: { grid: { display: false } },
-      y: { beginAtZero: true },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 0 },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: "rgba(0,0,0,0.05)" },
+      },
     },
   };
 
-  // --------- MERGE DE OPTIONS (SUPER SEGURO) ---------
-  const mergedOptions = {
+  // ==================================================
+  // MERGE SEGURO DAS OPTIONS
+  // ==================================================
+  const mergedOptions: ChartOptions<"line"> = {
     ...defaultOptions,
     ...options,
     plugins: {
@@ -89,9 +124,31 @@ export default function LineChart({ chartData, options }: LineChartProps) {
     },
   };
 
+  // ==================================================
+  // JSX
+  // ==================================================
   return (
-    <div className="w-full h-[400px]">
-      <Line data={chartData} options={mergedOptions} />
-    </div>
+    <section className="bg-white p-6 rounded-lg shadow space-y-4">
+      {/* Cabeçalho opcional */}
+      {(title || subtitle) && (
+        <div>
+          {title && (
+            <h3 className="text-lg font-semibold text-gray-800">
+              {title}
+            </h3>
+          )}
+          {subtitle && (
+            <p className="text-sm text-gray-500">
+              {subtitle}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Gráfico */}
+      <div style={{ height }}>
+        <Line data={chartData} options={mergedOptions} />
+      </div>
+    </section>
   );
 }
