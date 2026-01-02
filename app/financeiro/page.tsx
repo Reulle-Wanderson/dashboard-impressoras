@@ -43,43 +43,52 @@ export default async function FinanceiroHome({
       <h1 className="text-3xl font-bold mb-4">Financeiro</h1>
 
       {/* =========================
-          FILTRO MÊS / ANO
+          FILTROS + AÇÃO
       ========================= */}
-      <form method="GET" className="flex gap-4 items-end">
-        <div>
-          <label className="text-sm">Mês</label>
-          <select
-            name="mes"
-            defaultValue={mes}
-            className="border rounded px-2 py-1"
-          >
-            {Array.from({ length: 12 }).map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {String(i + 1).padStart(2, "0")}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <form method="GET" className="flex gap-4 items-end">
+          <div>
+            <label className="text-sm">Mês</label>
+            <select
+              name="mes"
+              defaultValue={mes}
+              className="border rounded px-2 py-1"
+            >
+              {Array.from({ length: 12 }).map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {String(i + 1).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="text-sm">Ano</label>
-          <select
-            name="ano"
-            defaultValue={ano}
-            className="border rounded px-2 py-1"
-          >
-            {[2024, 2025, 2026].map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="text-sm">Ano</label>
+            <select
+              name="ano"
+              defaultValue={ano}
+              className="border rounded px-2 py-1"
+            >
+              {[2024, 2025, 2026].map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <button className="bg-gray-800 text-white px-4 py-2 rounded">
-          Filtrar
-        </button>
-      </form>
+          <button className="bg-gray-800 text-white px-4 py-2 rounded">
+            Filtrar
+          </button>
+        </form>
+
+        <a
+          href="/financeiro/papel/nova"
+          className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 inline-block"
+        >
+          Registrar compra de papel
+        </a>
+      </div>
 
       {/* =========================
           CARDS
@@ -103,18 +112,6 @@ export default async function FinanceiroHome({
             R$ {totalCustoReal.toFixed(2)}
           </p>
         </div>
-      </div>
-
-      {/* =========================
-          AÇÃO – COMPRA DE PAPEL
-      ========================= */}
-      <div>
-        <a
-          href="/financeiro/papel/nova"
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 inline-block"
-        >
-          Registrar compra de papel
-        </a>
       </div>
 
       {/* =========================
