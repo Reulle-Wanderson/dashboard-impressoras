@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  Th,
+  Td,
+} from "@/components/ui/table";
+
 export default async function ListaImpressoras() {
   const { data: printers, error } = await supabase
     .from("printers")
@@ -47,41 +56,36 @@ export default async function ListaImpressoras() {
           Nenhuma impressora cadastrada.
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-gray-600">
-              <tr>
-                <th className="p-3 text-left">Nome</th>
-                <th className="p-3 text-left">IP</th>
-                <th className="p-3 text-left">Criada em</th>
-              </tr>
-            </thead>
+        <Table>
+          <TableHead>
+            <tr>
+              <Th>Nome</Th>
+              <Th>IP</Th>
+              <Th>Criada em</Th>
+            </tr>
+          </TableHead>
 
-            <tbody>
-              {printers.map((printer) => (
-                <tr
-                  key={printer.id}
-                  className="border-t hover:bg-gray-50 transition"
-                >
-                  <td className="p-3">
-                    <Link
-                      href={`/impressoras/${printer.id}`}
-                      className="text-blue-600 font-medium hover:underline"
-                    >
-                      {printer.nome}
-                    </Link>
-                  </td>
+          <TableBody>
+            {printers.map((printer) => (
+              <TableRow key={printer.id}>
+                <Td bold>
+                  <Link
+                    href={`/impressoras/${printer.id}`}
+                    className="text-blue-600 hover:underline tracking-tight"
+                  >
+                    {printer.nome}
+                  </Link>
+                </Td>
 
-                  <td className="p-3">{printer.ip}</td>
+                <Td>{printer.ip}</Td>
 
-                  <td className="p-3">
-                    {new Date(printer.created_at).toLocaleString("pt-BR")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                <Td>
+                  {new Date(printer.created_at).toLocaleString("pt-BR")}
+                </Td>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </section>
   );

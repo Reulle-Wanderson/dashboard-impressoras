@@ -216,7 +216,7 @@ export default function HistoricoPage() {
               Impressora
             </label>
             <select
-              className="border rounded px-3 py-2 min-w-[220px]"
+              className="border rounded px-3 py-2 min-w-55"
               value={impressoraSelecionada}
               onChange={(e) =>
                 setImpressoraSelecionada(e.target.value)
@@ -272,7 +272,7 @@ export default function HistoricoPage() {
       {/* =========================
           TABELA
       ========================= */}
-      <div className="bg-white rounded-lg shadow overflow-y-auto max-h-[520px]">
+      <div className="bg-white rounded-lg shadow overflow-y-auto max-h-130">
         <TabelaHistorico
           registros={filtrado.map((r) => ({
             data: r.data,

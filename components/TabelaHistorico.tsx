@@ -50,13 +50,13 @@ export default function TabelaHistorico({
         <table className="w-full text-sm text-center">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
-              <th className="px-4 py-3 font-medium text-center">
+              <th className="px-4 py-3 text-base font-semibold text-center">
                 Impressora
               </th>
-              <th className="px-4 py-3 font-medium text-center">
+              <th className="px-4 py-3 text-base font-semibold text-center">
                 Data
               </th>
-              <th className="px-4 py-3 font-medium text-center">
+              <th className="px-4 py-3 text-base font-semibold text-center">
                 Páginas
               </th>
             </tr>
