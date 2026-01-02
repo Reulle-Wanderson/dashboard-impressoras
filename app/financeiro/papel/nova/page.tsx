@@ -1,24 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+type TipoCompra = "resma" | "caixa";
+
 export default function NovaCompraPapel() {
+  const router = useRouter();
+
   const [data, setData] = useState("");
-  const [quantidade, setQuantidade] = useState("");
+  const [tipo, setTipo] = useState<TipoCompra>("resma");
+  const [quantidadeUnidades, setQuantidadeUnidades] = useState("");
   const [valor, setValor] = useState("");
   const [fornecedor, setFornecedor] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
+  // =========================
+  // CÁLCULO AUTOMÁTICO
+  // =========================
+  const paginasPorUnidade = tipo === "caixa" ? 5000 : 500;
 
+  const quantidadePaginas = useMemo(() => {
+    const q = Number(quantidadeUnidades);
+    if (!q || q <= 0) return 0;
+    return q * paginasPorUnidade;
+  }, [quantidadeUnidades, paginasPorUnidade]);
+
+  // =========================
+  // SALVAR
+  // =========================
   async function salvarCompra(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!data || !quantidade || !valor) {
-      toast.error("Preencha data, quantidade e valor.");
+    if (!data || !quantidadeUnidades || !valor) {
+      toast.error("Preencha data, tipo, quantidade e valor.");
+      return;
+    }
+
+    if (quantidadePaginas <= 0) {
+      toast.error("Quantidade inválida.");
       return;
     }
 
@@ -31,16 +53,11 @@ export default function NovaCompraPapel() {
       return;
     }
 
-    if (Number(quantidade) <= 0) {
-      toast.error("Quantidade deve ser maior que zero.");
-      return;
-    }
-
     setLoading(true);
 
     const { error } = await supabase.from("compras_papel").insert({
       data,
-      quantidade_folhas: Number(quantidade),
+      quantidade_folhas: quantidadePaginas,
       valor_total: valorNumerico,
       fornecedor: fornecedor || null,
     });
@@ -49,11 +66,18 @@ export default function NovaCompraPapel() {
 
     if (error) {
       console.error(error);
-      toast.error("Erro ao registrar compra.");
+      toast.error("Erro ao registrar compra", {
+        description: "Verifique os dados e tente novamente.",
+        className: "border-red-200 bg-red-50 text-red-900",
+      });
+
       return;
     }
 
-    toast.success("Compra registrada com sucesso ✅");
+    toast.success("Compra registrada com sucesso", {
+      description: "Os dados já foram incluídos no financeiro.",
+      className: "border-blue-200 bg-blue-50 text-blue-900",
+    });
     router.push("/financeiro");
   }
 
@@ -67,7 +91,7 @@ export default function NovaCompraPapel() {
           Registrar compra de papel
         </h1>
         <p className="text-sm text-gray-500">
-          Cadastre uma nova compra para cálculo de custo por página
+          O sistema calcula automaticamente a quantidade de páginas
         </p>
       </div>
 
@@ -92,18 +116,46 @@ export default function NovaCompraPapel() {
             />
           </div>
 
+          {/* Tipo */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1">
+              Tipo de compra
+            </label>
+            <select
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as TipoCompra)}
+              className="border rounded px-3 py-2"
+            >
+              <option value="resma">Resma (500 páginas)</option>
+              <option value="caixa">Caixa (5000 páginas)</option>
+            </select>
+          </div>
+
           {/* Quantidade */}
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-600 mb-1">
-              Quantidade de folhas
+              Quantidade ({tipo === "caixa" ? "caixas" : "resmas"})
             </label>
             <input
               type="number"
-              value={quantidade}
-              onChange={(e) => setQuantidade(e.target.value)}
-              className="border rounded px-3 py-2"
-              placeholder="Ex.: 5000"
               min={1}
+              value={quantidadeUnidades}
+              onChange={(e) => setQuantidadeUnidades(e.target.value)}
+              className="border rounded px-3 py-2"
+              placeholder="Ex.: 2"
+            />
+          </div>
+
+          {/* Total calculado */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1">
+              Total de páginas (calculado)
+            </label>
+            <input
+              type="text"
+              value={quantidadePaginas.toLocaleString("pt-BR")}
+              disabled
+              className="border rounded px-3 py-2 bg-gray-100 text-gray-700"
             />
           </div>
         </div>
@@ -132,7 +184,6 @@ export default function NovaCompraPapel() {
             value={fornecedor}
             onChange={(e) => setFornecedor(e.target.value)}
             className="border rounded px-3 py-2"
-            placeholder="Ex.: Kalunga, Papelaria X..."
           />
         </div>
 
