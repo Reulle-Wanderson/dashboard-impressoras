@@ -51,6 +51,32 @@ export default async function FinanceiroHome({
       </div>
 
       {/* =========================
+          CARDS
+      ========================= */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Custo médio por página</p>
+          <p className="text-2xl font-bold text-blue-700">
+            R$ {custoPorFolha.toFixed(4)}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Total impresso</p>
+          <p className="text-2xl font-bold text-gray-800">
+            {totalImpressoMes}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <p className="text-sm text-gray-500">Custo total estimado</p>
+          <p className="text-2xl font-bold text-green-600">
+            R$ {totalCustoReal.toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      {/* =========================
           FILTROS + AÇÃO
       ========================= */}
       <div className="bg-white p-6 rounded-lg shadow flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -98,31 +124,7 @@ export default async function FinanceiroHome({
         </a>
       </div>
 
-      {/* =========================
-          CARDS
-      ========================= */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-sm text-gray-500">Custo médio por página</p>
-          <p className="text-2xl font-bold text-blue-700">
-            R$ {custoPorFolha.toFixed(4)}
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-sm text-gray-500">Total impresso</p>
-          <p className="text-2xl font-bold text-gray-800">
-            {totalImpressoMes}
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <p className="text-sm text-gray-500">Custo total estimado</p>
-          <p className="text-2xl font-bold text-green-600">
-            R$ {totalCustoReal.toFixed(2)}
-          </p>
-        </div>
-      </div>
+      
 
       {/* =========================
           RANKING IMPRESSORAS
