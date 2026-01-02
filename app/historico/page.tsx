@@ -20,7 +20,7 @@ interface RegistroSupabase {
 
 interface RegistroConsumo {
   data: string;
-  paginas: number; // delta
+  paginas: number;
   printer: string;
 }
 
@@ -114,7 +114,7 @@ export default function HistoricoPage() {
   }, []);
 
   // ----------------------------------------
-  // LISTA DE IMPRESSORAS (VOLTA A FUNCIONAR)
+  // LISTA DE IMPRESSORAS
   // ----------------------------------------
   const listaImpressoras = useMemo(() => {
     return Array.from(new Set(registros.map((r) => r.printer))).sort();
@@ -169,66 +169,110 @@ export default function HistoricoPage() {
 
   const totalPeriodo = filtrado.reduce((s, r) => s + r.paginas, 0);
 
-  if (loading) return <div className="p-6">Carregando...</div>;
+  if (loading) {
+    return <div className="p-6 text-gray-600">Carregando histórico...</div>;
+  }
 
   // ----------------------------------------
   // JSX
   // ----------------------------------------
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Histórico</h1>
+    <section className="space-y-8">
+      {/* =========================
+          TÍTULO
+      ========================= */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Histórico de consumo
+        </h1>
+        <p className="text-sm text-gray-500">
+          Detalhamento diário de páginas impressas
+        </p>
+      </div>
 
-      <div className="bg-white p-4 rounded shadow space-y-4">
-        <div className="flex flex-wrap gap-4">
-          <select
-            className="border p-2 rounded"
-            value={tipoFiltro}
-            onChange={(e) => setTipoFiltro(e.target.value)}
-          >
-            <option value="7">Últimos 7 dias</option>
-            <option value="30">Últimos 30 dias</option>
-            <option value="mes">Mês atual</option>
-            <option value="custom">Personalizado</option>
-          </select>
+      {/* =========================
+          FILTROS
+      ========================= */}
+      <div className="bg-white p-6 rounded-lg shadow space-y-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600">
+              Período
+            </label>
+            <select
+              className="border rounded px-3 py-2"
+              value={tipoFiltro}
+              onChange={(e) => setTipoFiltro(e.target.value)}
+            >
+              <option value="7">Últimos 7 dias</option>
+              <option value="30">Últimos 30 dias</option>
+              <option value="mes">Mês atual</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
 
-          <select
-            className="border p-2 rounded"
-            value={impressoraSelecionada}
-            onChange={(e) => setImpressoraSelecionada(e.target.value)}
-          >
-            <option value="todas">Todas as impressoras</option>
-            {listaImpressoras.map((nome) => (
-              <option key={nome} value={nome}>
-                {nome}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600">
+              Impressora
+            </label>
+            <select
+              className="border rounded px-3 py-2 min-w-[220px]"
+              value={impressoraSelecionada}
+              onChange={(e) =>
+                setImpressoraSelecionada(e.target.value)
+              }
+            >
+              <option value="todas">Todas as impressoras</option>
+              {listaImpressoras.map((nome) => (
+                <option key={nome} value={nome}>
+                  {nome}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {tipoFiltro === "custom" && (
             <>
-              <input
-                type="date"
-                className="border p-2 rounded"
-                value={inicioCustom}
-                onChange={(e) => setInicioCustom(e.target.value)}
-              />
-              <input
-                type="date"
-                className="border p-2 rounded"
-                value={fimCustom}
-                onChange={(e) => setFimCustom(e.target.value)}
-              />
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-600">
+                  Data início
+                </label>
+                <input
+                  type="date"
+                  className="border rounded px-3 py-2"
+                  value={inicioCustom}
+                  onChange={(e) => setInicioCustom(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-600">
+                  Data fim
+                </label>
+                <input
+                  type="date"
+                  className="border rounded px-3 py-2"
+                  value={fimCustom}
+                  onChange={(e) => setFimCustom(e.target.value)}
+                />
+              </div>
             </>
           )}
         </div>
 
-        <p className="text-gray-700">
+        <div className="text-gray-700">
           Total no período:{" "}
-          <strong>{totalPeriodo.toLocaleString("pt-BR")}</strong> páginas
-        </p>
+          <strong className="text-blue-700">
+            {totalPeriodo.toLocaleString("pt-BR")}
+          </strong>{" "}
+          páginas
+        </div>
       </div>
 
-      <div className="bg-white rounded shadow max-h-130 overflow-y-auto">
+      {/* =========================
+          TABELA
+      ========================= */}
+      <div className="bg-white rounded-lg shadow overflow-y-auto max-h-[520px]">
         <TabelaHistorico
           registros={filtrado.map((r) => ({
             data: r.data,
@@ -240,6 +284,6 @@ export default function HistoricoPage() {
           }))}
         />
       </div>
-    </main>
+    </section>
   );
 }

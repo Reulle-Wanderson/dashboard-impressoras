@@ -22,7 +22,9 @@ export default function EditarImpressoraConteudo({ params }: Props) {
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
-  // 🔥 pegar ID da rota
+  // ==================================================
+  // 🔓 Resolver params (Next 15+)
+  // ==================================================
   useEffect(() => {
     async function resolveParams() {
       const p = await params;
@@ -31,7 +33,9 @@ export default function EditarImpressoraConteudo({ params }: Props) {
     resolveParams();
   }, [params]);
 
-  // 🔥 carregar dados
+  // ==================================================
+  // 📥 Carregar dados
+  // ==================================================
   useEffect(() => {
     if (!id) return;
 
@@ -59,7 +63,9 @@ export default function EditarImpressoraConteudo({ params }: Props) {
     carregar();
   }, [id, router]);
 
-  // 🔥 salvar alterações
+  // ==================================================
+  // 💾 Salvar alterações
+  // ==================================================
   async function salvar() {
     if (!id) return;
 
@@ -82,63 +88,102 @@ export default function EditarImpressoraConteudo({ params }: Props) {
     }
 
     toast.success("Impressora atualizada com sucesso!");
-    router.push("/impressoras");
+    router.push(`/impressoras/${id}`);
   }
 
-  if (loading) return <p className="p-8">Carregando...</p>;
+  if (loading) {
+    return <div className="p-6 text-gray-600">Carregando dados...</div>;
+  }
 
   return (
-    <main className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Editar Impressora</h1>
+    <section className="space-y-8 max-w-2xl mx-auto">
+      {/* =========================
+          TÍTULO
+      ========================= */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Editar impressora
+        </h1>
+        <p className="text-sm text-gray-500">
+          Atualize os dados cadastrais da impressora
+        </p>
+      </div>
 
-      <div className="space-y-4 bg-white p-6 rounded shadow">
-        <div>
-          <label>Nome</label>
-          <input
-            className="w-full p-2 border rounded"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-          />
+      {/* =========================
+          FORMULÁRIO
+      ========================= */}
+      <div className="bg-white p-8 rounded-lg shadow space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Nome */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1">
+              Nome da impressora
+            </label>
+            <input
+              className="border rounded px-3 py-2"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+          </div>
+
+          {/* IP */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1">
+              Endereço IP
+            </label>
+            <input
+              className="border rounded px-3 py-2"
+              value={ip}
+              onChange={(e) => setIp(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div>
-          <label>IP</label>
+        {/* Setor */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600 mb-1">
+            Setor
+          </label>
           <input
-            className="w-full p-2 border rounded"
-            value={ip}
-            onChange={(e) => setIp(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label>Setor</label>
-          <input
-            className="w-full p-2 border rounded"
+            className="border rounded px-3 py-2"
             value={setor}
             onChange={(e) => setSetor(e.target.value)}
           />
         </div>
 
-        <div>
-          <label>Desconto de borrão (%)</label>
+        {/* Desconto */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600 mb-1">
+            Desconto de borrão (%)
+          </label>
           <input
             type="number"
-            min="0"
-            max="100"
-            className="w-full p-2 border rounded"
+            min={0}
+            max={100}
+            className="border rounded px-3 py-2 w-40"
             value={desconto}
             onChange={(e) => setDesconto(Number(e.target.value))}
           />
         </div>
 
-        <button
-          onClick={salvar}
-          disabled={salvando}
-          className="bg-blue-600 text-white w-full p-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {salvando ? "Salvando..." : "Salvar alterações"}
-        </button>
+        {/* AÇÕES */}
+        <div className="flex gap-4 pt-4">
+          <button
+            onClick={salvar}
+            disabled={salvando}
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Salvar alterações"}
+          </button>
+
+          <button
+            onClick={() => router.push(`/impressoras/${id}`)}
+            className="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300 transition"
+          >
+            Cancelar
+          </button>
+        </div>
       </div>
-    </main>
+    </section>
   );
 }

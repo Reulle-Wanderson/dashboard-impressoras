@@ -20,9 +20,9 @@ export default function Dashboard() {
   const [filters, setFilters] = useState<any>({});
   const [printersList, setPrintersList] = useState<Printer[]>([]);
 
-  // ------------------------------------------------------------
-  // 🔹 CARREGA LISTA DE IMPRESSORAS PARA O DROPDOWN
-  // ------------------------------------------------------------
+  // ==================================================
+  // 🔹 LISTA DE IMPRESSORAS
+  // ==================================================
   useEffect(() => {
     async function carregarImpressoras() {
       const { data } = await supabase
@@ -36,9 +36,9 @@ export default function Dashboard() {
     carregarImpressoras();
   }, []);
 
-  // ------------------------------------------------------------
-  // 🔹 CARREGA DADOS DO GRÁFICO COM FILTROS
-  // ------------------------------------------------------------
+  // ==================================================
+  // 🔹 CARREGA DADOS COM FILTROS
+  // ==================================================
   useEffect(() => {
     carregar();
   }, [filters]);
@@ -50,27 +50,13 @@ export default function Dashboard() {
       .order("printer_id", { ascending: true })
       .order("data", { ascending: true });
 
-    // ✔ FILTRO POR IMPRESSORA
-    if (filters.printer) {
-      query = query.eq("printer_id", filters.printer);
-    }
-
-    // ✔ FILTRO POR DATA INÍCIO
-    if (filters.dataInicio) {
-      query = query.gte("data", filters.dataInicio);
-    }
-
-    // ✔ FILTRO POR DATA FIM
-    if (filters.dataFim) {
-      query = query.lte("data", filters.dataFim);
-    }
+    if (filters.printer) query = query.eq("printer_id", filters.printer);
+    if (filters.dataInicio) query = query.gte("data", filters.dataInicio);
+    if (filters.dataFim) query = query.lte("data", filters.dataFim);
 
     const { data, error } = await query;
     if (!data || error) return;
 
-    // ------------------------------------------------------------
-    // 🔹 ORGANIZA REGISTROS POR IMPRESSORA
-    // ------------------------------------------------------------
     const porImpressora = new Map<string, Registro[]>();
 
     for (const r of data) {
@@ -80,17 +66,11 @@ export default function Dashboard() {
       porImpressora.get(r.printer_id)!.push(r);
     }
 
-    // ------------------------------------------------------------
-    // 🔹 CALCULA TOTAL DE PÁGINAS POR DIA (COM DIFERENÇA)
-    // ------------------------------------------------------------
     const totalPorDia = new Map<string, number>();
 
     for (const registros of porImpressora.values()) {
       registros.forEach((r, i) => {
-        if (i === 0) {
-          totalPorDia.set(r.data, (totalPorDia.get(r.data) ?? 0));
-          return;
-        }
+        if (i === 0) return;
 
         const anterior = registros[i - 1];
         const valorDoDia = Math.max(r.paginas - anterior.paginas, 0);
@@ -102,9 +82,6 @@ export default function Dashboard() {
     const labels = [...totalPorDia.keys()].sort();
     const valores = labels.map((d) => totalPorDia.get(d) ?? 0);
 
-    // ------------------------------------------------------------
-    // 🔹 MÉDIA MÓVEL DE 7 DIAS
-    // ------------------------------------------------------------
     function mediaMovel(arr: number[], dias: number) {
       return arr.map((_, i) => {
         const inicio = Math.max(0, i - dias + 1);
@@ -116,21 +93,19 @@ export default function Dashboard() {
 
     const media7dias = mediaMovel(valores, 7);
 
-    // ------------------------------------------------------------
-    // 🔹 MONTA DADOS PARA O GRÁFICO
-    // ------------------------------------------------------------
     setChartData({
-      labels: labels.map((d) => new Date(d).toLocaleDateString("pt-BR")),
+      labels: labels.map((d) =>
+        new Date(d).toLocaleDateString("pt-BR")
+      ),
       datasets: [
         {
-          label: "Total diário (todas impressoras)",
+          label: "Total diário",
           data: valores,
           borderWidth: 2,
           tension: 0.35,
           borderColor: "#2563eb",
-          backgroundColor: "rgba(37, 99, 235, 0.25)",
-          pointBackgroundColor: "#1d4ed8",
-          pointRadius: 4,
+          backgroundColor: "rgba(37, 99, 235, 0.2)",
+          pointRadius: 3,
         },
         {
           label: "Média móvel (7 dias)",
@@ -138,45 +113,45 @@ export default function Dashboard() {
           borderWidth: 2,
           tension: 0.35,
           borderColor: "#10b981",
-          backgroundColor: "rgba(16, 185, 129, 0.15)",
-          pointRadius: 0,
           borderDash: [6, 4],
+          pointRadius: 0,
         },
       ],
     });
   }
 
-  // ------------------------------------------------------------
-  // 🔹 FUNÇÃO DO FILTRO
-  // ------------------------------------------------------------
-  function aplicarFiltros(f: any) {
-    setFilters(f);
+  if (!chartData) {
+    return <div className="p-6 text-gray-600">Carregando dashboard...</div>;
   }
 
-  // ------------------------------------------------------------
-  // 🔹 CARREGANDO
-  // ------------------------------------------------------------
-  if (!chartData) return <div className="p-6">Carregando...</div>;
-
-  // ------------------------------------------------------------
-  // 🔹 INTERFACE COMPLETA
-  // ------------------------------------------------------------
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Dashboard Geral</h1>
+    <section className="space-y-8">
+      {/* =========================
+          TÍTULO
+      ========================= */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Dashboard Geral
+        </h1>
+        <p className="text-sm text-gray-500">
+          Visão consolidada do consumo de páginas
+        </p>
+      </div>
 
-      {/* ------------------ FILTRO ------------------ */}
-      <div className="flex gap-4 mb-6 bg-gray-100 p-4 rounded-lg items-end">
-        {/* Impressora */}
+      {/* =========================
+          FILTROS
+      ========================= */}
+      <div className="bg-white p-6 rounded-lg shadow flex flex-col md:flex-row gap-4 items-end">
         <div className="flex flex-col">
-          <label className="text-sm font-medium">Impressora</label>
+          <label className="text-sm font-medium text-gray-600">
+            Impressora
+          </label>
           <select
-            className="border p-2 rounded min-w-[200px]"
+            className="border rounded px-3 py-2 min-w-[220px]"
             value={filters.printer || ""}
-            onChange={(e) => aplicarFiltros({
-              ...filters,
-              printer: e.target.value || null,
-            })}
+            onChange={(e) =>
+              setFilters({ ...filters, printer: e.target.value || null })
+            }
           >
             <option value="">Todas</option>
             {printersList.map((p) => (
@@ -187,40 +162,41 @@ export default function Dashboard() {
           </select>
         </div>
 
-        {/* Data início */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium">Data início</label>
+          <label className="text-sm font-medium text-gray-600">
+            Data início
+          </label>
           <input
             type="date"
-            className="border p-2 rounded"
+            className="border rounded px-3 py-2"
             value={filters.dataInicio || ""}
-            onChange={(e) => aplicarFiltros({
-              ...filters,
-              dataInicio: e.target.value || null,
-            })}
+            onChange={(e) =>
+              setFilters({ ...filters, dataInicio: e.target.value || null })
+            }
           />
         </div>
 
-        {/* Data fim */}
         <div className="flex flex-col">
-          <label className="text-sm font-medium">Data fim</label>
+          <label className="text-sm font-medium text-gray-600">
+            Data fim
+          </label>
           <input
             type="date"
-            className="border p-2 rounded"
+            className="border rounded px-3 py-2"
             value={filters.dataFim || ""}
-            onChange={(e) => aplicarFiltros({
-              ...filters,
-              dataFim: e.target.value || null,
-            })}
+            onChange={(e) =>
+              setFilters({ ...filters, dataFim: e.target.value || null })
+            }
           />
         </div>
-
       </div>
 
-      {/* ------------------ GRÁFICO ------------------ */}
-      <div className="w-full bg-white p-6 rounded-lg shadow">
+      {/* =========================
+          GRÁFICO
+      ========================= */}
+      <div className="bg-white p-6 rounded-lg shadow">
         <LineChart chartData={chartData} />
       </div>
-    </main>
+    </section>
   );
 }

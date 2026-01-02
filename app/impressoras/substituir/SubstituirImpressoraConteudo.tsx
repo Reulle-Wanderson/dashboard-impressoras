@@ -34,7 +34,9 @@ export default function SubstituirImpressoraConteudo() {
 
   const router = useRouter();
 
-  // 🔄 carregar impressoras ativas
+  // ==================================================
+  // 🔄 Carregar impressoras ativas
+  // ==================================================
   useEffect(() => {
     async function carregarImpressoras() {
       const { data, error } = await supabase
@@ -54,7 +56,9 @@ export default function SubstituirImpressoraConteudo() {
     carregarImpressoras();
   }, []);
 
-  // 🔎 validar IPv4
+  // ==================================================
+  // 🔎 Validar IPv4
+  // ==================================================
   function validarIp(ip: string) {
     const regex =
       /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
@@ -62,14 +66,15 @@ export default function SubstituirImpressoraConteudo() {
     return regex.test(ip);
   }
 
-  // 🔁 substituir impressora
+  // ==================================================
+  // 🔁 Substituir impressora
+  // ==================================================
   async function substituirImpressora() {
     if (!selecionada || !novoNome.trim() || !motivo.trim()) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
-    // validar IP apenas se informado
     if (novoIp.trim() && !validarIp(novoIp)) {
       toast.error("IP inválido — informe um IPv4 válido");
       return;
@@ -77,7 +82,6 @@ export default function SubstituirImpressoraConteudo() {
 
     setLoading(true);
 
-    // impedir IP duplicado apenas se IP foi informado
     if (novoIp.trim()) {
       const { data: existente } = await supabase
         .from("printers")
@@ -92,7 +96,6 @@ export default function SubstituirImpressoraConteudo() {
       }
     }
 
-    // desativar impressora antiga
     const { error: erroUpdate } = await supabase
       .from("printers")
       .update({ status: "inativa" })
@@ -104,7 +107,6 @@ export default function SubstituirImpressoraConteudo() {
       return;
     }
 
-    // cadastrar nova impressora
     const { error: erroInsert } = await supabase.from("printers").insert({
       nome: novoNome,
       ip: novoIp.trim() || null,
@@ -122,15 +124,33 @@ export default function SubstituirImpressoraConteudo() {
     router.push("/impressoras");
   }
 
+  // ==================================================
+  // JSX
+  // ==================================================
   return (
-    <main className="p-8 flex justify-center">
-      <Card className="w-full max-w-xl">
-        <CardContent className="space-y-6 pt-6">
-          <h1 className="text-2xl font-bold">Substituir Impressora</h1>
+    <section className="space-y-8 max-w-2xl mx-auto">
+      {/* =========================
+          TÍTULO
+      ========================= */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800">
+          Substituir impressora
+        </h1>
+        <p className="text-sm text-gray-500">
+          Desative uma impressora antiga e cadastre a substituta
+        </p>
+      </div>
 
-          {/* impressora antiga */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Impressora antiga</label>
+      {/* =========================
+          FORMULÁRIO
+      ========================= */}
+      <Card>
+        <CardContent className="space-y-6 pt-6">
+          {/* Impressora antiga */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-600">
+              Impressora antiga
+            </label>
             <Select onValueChange={setSelecionada}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma impressora" />
@@ -145,18 +165,21 @@ export default function SubstituirImpressoraConteudo() {
             </Select>
           </div>
 
-          {/* novo nome */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Nome da nova impressora</label>
+          {/* Novo nome */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-600">
+              Nome da nova impressora
+            </label>
             <Input
               value={novoNome}
               onChange={(e) => setNovoNome(e.target.value)}
+              placeholder="Ex.: BROTHER 7055 (nova)"
             />
           </div>
 
-          {/* novo IP */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
+          {/* Novo IP */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-600">
               IP da nova impressora (opcional)
             </label>
             <Input
@@ -166,35 +189,48 @@ export default function SubstituirImpressoraConteudo() {
             />
           </div>
 
-          {/* motivo */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Motivo da substituição</label>
+          {/* Motivo */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-600">
+              Motivo da substituição
+            </label>
             <Textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              placeholder="Ex.: defeito no fusor, baixo rendimento do toner..."
+              placeholder="Ex.: defeito no fusor, troca por modelo novo…"
             />
           </div>
 
-          {/* botão */}
-          <Button
-            className="w-full"
-            onClick={() => setConfirmOpen(true)}
-            disabled={loading}
-          >
-            {loading ? "Processando..." : "Confirmar substituição"}
-          </Button>
+          {/* AÇÕES */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setConfirmOpen(true)}
+              disabled={loading}
+            >
+              {loading ? "Processando..." : "Confirmar substituição"}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => router.push("/impressoras")}
+            >
+              Cancelar
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* confirmação */}
+      {/* =========================
+          CONFIRMAÇÃO
+      ========================= */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar substituição?</DialogTitle>
           </DialogHeader>
 
-          <p>
+          <p className="text-sm text-gray-600">
             A impressora antiga será desativada e uma nova será cadastrada no
             sistema. Deseja continuar?
           </p>
@@ -203,10 +239,12 @@ export default function SubstituirImpressoraConteudo() {
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={substituirImpressora}>Confirmar</Button>
+            <Button onClick={substituirImpressora}>
+              Confirmar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </section>
   );
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
-import "./globals.css";
 import { Toaster } from "sonner";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,61 +21,92 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-100`}
       >
-        {/* Navbar */}
-        <nav className="w-full bg-white shadow p-4 flex gap-6 mb-6">
-          <Link href="/" className="font-medium text-gray-700 hover:underline">
-            Impressoras
-          </Link>
+        {/* =========================
+            HEADER SUPERIOR
+        ========================= */}
+        <header className="w-full bg-gradient-to-r from-blue-900 via-blue-800 to-blue-600 shadow">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between h-20">
+              {/* LOGO / TÍTULO */}
+              <div className="flex items-center gap-3 text-white">
+                <div className="text-2xl font-extrabold tracking-wide">
+                  Printer Monitor
+                </div>
+                <span className="text-xs text-blue-200 hidden sm:block">
+                  Gestão e controle de impressoras
+                </span>
+              </div>
 
-          <Link
-            href="/impressoras/nova"
-            className="font-medium text-gray-700 hover:underline"
-          >
-            Cadastrar Impressora
-          </Link>
+              {/* MENU */}
+              <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white">
+                <Link href="/" className="hover:text-cyan-300 transition">
+                  Impressoras
+                </Link>
 
-          <Link
-            href="/historico"
-            className="font-medium text-gray-700 hover:underline"
-          >
-            Histórico
-          </Link>
+                <Link
+                  href="/impressoras/nova"
+                  className="hover:text-cyan-300 transition"
+                >
+                  Cadastrar
+                </Link>
 
-          <Link
-            href="/dashboard"
-            className="font-medium text-gray-700 hover:underline"
-          >
-            Dashboard
-          </Link>
+                <Link
+                  href="/historico"
+                  className="hover:text-cyan-300 transition"
+                >
+                  Histórico
+                </Link>
 
-          <Link
-            href="/financeiro"
-            className="font-semibold text-blue-600 hover:underline"
-          >
-            Financeiro
-          </Link>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-cyan-300 transition"
+                >
+                  Dashboard
+                </Link>
 
-          <Link
-            href="/impressoras/substituir"
-            className="font-medium text-gray-700 hover:underline"
-          >
-            Substituir Impressora
-          </Link>
-        </nav>
+                <Link
+                  href="/financeiro"
+                  className="text-cyan-300 border-b-2 border-cyan-300 pb-1"
+                >
+                  Financeiro
+                </Link>
 
+                <Link
+                  href="/impressoras/substituir"
+                  className="hover:text-cyan-300 transition"
+                >
+                  Substituir
+                </Link>
+              </nav>
 
-        {/* Conteúdo */}
-        <div className="max-w-6xl mx-auto px-4">{children}</div>
+              {/* USUÁRIO / AÇÃO */}
+              <div className="hidden md:flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-cyan-400 flex items-center justify-center text-blue-900 font-bold">
+                  U
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-        {/* Toaster */}
+        {/* =========================
+            CONTEÚDO
+        ========================= */}
+        <main className="max-w-6xl mx-auto px-6 py-8">
+          {children}
+        </main>
+
+        {/* =========================
+            TOASTER
+        ========================= */}
         <Toaster richColors position="top-right" />
       </body>
     </html>

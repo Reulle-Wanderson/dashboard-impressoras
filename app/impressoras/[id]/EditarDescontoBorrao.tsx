@@ -34,35 +34,50 @@ export function EditarDescontoBorrao({
       return;
     }
 
-    toast.success("Percentual atualizado");
+    toast.success("Percentual de borrão atualizado");
   }
 
   return (
-    <div className="bg-white border p-4 rounded shadow max-w-md">
-      <h3 className="font-semibold text-lg mb-2">
-        Percentual de borrão da impressora
-      </h3>
+    <section className="bg-white p-6 rounded-lg shadow max-w-lg space-y-4">
+      {/* =========================
+          TÍTULO
+      ========================= */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800">
+          Percentual de borrão
+        </h3>
+        <p className="text-sm text-gray-500">
+          Define o desconto aplicado às páginas inválidas
+        </p>
+      </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          type="number"
-          min={0}
-          max={100}
-          step={0.1}
-          className="border rounded p-2 w-24"
-          value={valor}
-          onChange={(e) => setValor(Number(e.target.value))}
-        />
-        <span className="text-gray-600">%</span>
+      {/* =========================
+          CONTROLE
+      ========================= */}
+      <div className="flex items-end gap-4">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-600">
+            Percentual (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            className="border rounded px-3 py-2 w-32"
+            value={valor}
+            onChange={(e) => setValor(Number(e.target.value))}
+          />
+        </div>
 
         <button
           onClick={salvar}
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
         >
           {loading ? "Salvando..." : "Salvar"}
         </button>
       </div>
-    </div>
+    </section>
   );
 }
