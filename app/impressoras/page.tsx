@@ -42,7 +42,7 @@ export default async function ListaImpressoras() {
 
         <Link
           href="/impressoras/nova"
-          className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition w-fit"
+          className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition"
         >
           Cadastrar impressora
         </Link>
@@ -58,17 +58,17 @@ export default async function ListaImpressoras() {
       ) : (
         <Table>
           <TableHead>
-            <tr>
-              <Th>Nome</Th>
-              <Th>IP</Th>
-              <Th>Criada em</Th>
-            </tr>
+            <TableRow>
+              <Th align="center">Nome</Th>
+              <Th align="center">IP</Th>
+              <Th align="center">Criada em</Th>
+            </TableRow>
           </TableHead>
 
           <TableBody>
             {printers.map((printer) => (
               <TableRow key={printer.id}>
-                <Td bold>
+                <Td align="center" bold>
                   <Link
                     href={`/impressoras/${printer.id}`}
                     className="text-blue-600 hover:underline tracking-tight"
@@ -77,9 +77,11 @@ export default async function ListaImpressoras() {
                   </Link>
                 </Td>
 
-                <Td>{printer.ip}</Td>
+                <Td align="center">
+                  {printer.ip ?? "-"}
+                </Td>
 
-                <Td>
+                <Td align="center">
                   {new Date(printer.created_at).toLocaleString("pt-BR")}
                 </Td>
               </TableRow>
