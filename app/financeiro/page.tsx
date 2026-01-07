@@ -116,15 +116,26 @@ export default async function FinanceiroHome({
           </button>
         </form>
 
-        <a
-          href="/financeiro/papel/nova"
-          className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition"
-        >
-          Registrar compra de papel
-        </a>
+        <div className="flex gap-3">
+          {/* Registrar compra */}
+          <a
+            href="/financeiro/papel/nova"
+            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+          >
+            Registrar compra de papel
+          </a>
+
+          {/* Histórico */}
+          <a
+            href="/financeiro/papel/historico"
+            className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition"
+          >
+            Histórico de compras
+          </a>
+        </div>   
       </div>
 
-      
+
 
       {/* =========================
           RANKING IMPRESSORAS
