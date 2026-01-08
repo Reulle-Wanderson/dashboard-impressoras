@@ -156,33 +156,59 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
   // JSX
   // ----------------------------------------
   return (
-    <section className="space-y-10">
-      {/* =========================
-          CABEÇALHO
-      ========================= */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">
-          {impressora.nome}
-        </h1>
-        <p className="text-sm text-gray-500">
-          IP: {impressora.ip} • Criada em{" "}
-          {new Date(impressora.created_at).toLocaleString("pt-BR")}
-        </p>
+  <section className="space-y-8">
+    {/* =========================
+        CABEÇALHO + AÇÕES
+    ========================= */}
+    <div className="bg-white p-6 rounded-lg shadow space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            {impressora.nome}
+          </h1>
+          <p className="text-sm text-gray-500">
+            IP: {impressora.ip} • Criada em{" "}
+            {new Date(impressora.created_at).toLocaleString("pt-BR")}
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <Link
+            href={`/impressoras/${impressora.id}/editar`}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            Editar
+          </Link>
+
+          <Link
+            href={`/impressoras/substituir?origem=${impressora.id}`}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Substituir
+          </Link>
+        </div>
       </div>
 
-      {/* =========================
-          FILTROS
-      ========================= */}
+      {/* BORRÃO */}
+      <EditarDescontoBorrao
+        id={impressora.id}
+        descontoInicial={impressora.desconto_borrao ?? 0}
+      />
+    </div>
+
+    {/* =========================
+        FILTRO + GRÁFICO
+    ========================= */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* FILTROS */}
       <div className="bg-white p-6 rounded-lg shadow space-y-4">
         <h2 className="font-semibold text-gray-700">
           Filtro de período
         </h2>
 
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="space-y-3">
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-600">
-              Período
-            </label>
+            <label className="text-sm text-gray-600">Período</label>
             <select
               value={tipoFiltro}
               onChange={(e) => setTipoFiltro(e.target.value)}
@@ -198,7 +224,7 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
           {tipoFiltro === "custom" && (
             <>
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-600">
+                <label className="text-sm text-gray-600">
                   Data início
                 </label>
                 <input
@@ -210,7 +236,7 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-600">
+                <label className="text-sm text-gray-600">
                   Data fim
                 </label>
                 <input
@@ -224,64 +250,36 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
           )}
         </div>
 
-        <div className="text-gray-700">
-          Total no período:{" "}
-          <strong className="text-blue-700">
+        <div className="pt-2 text-gray-700">
+          Total no período:
+          <div className="text-2xl font-bold text-blue-700">
             {totalPeriodo.toLocaleString("pt-BR")}
-          </strong>{" "}
-          páginas
+          </div>
+          <span className="text-sm">páginas</span>
         </div>
       </div>
 
-      {/* =========================
-          GRÁFICO
-      ========================= */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      {/* GRÁFICO */}
+      <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
         <LineChart chartData={chartData} />
       </div>
+    </div>
 
-      {/* =========================
-          TABELA
-      ========================= */}
-      <div className="bg-white rounded-lg shadow max-h-[420px] overflow-y-auto">
-        <TabelaHistorico
-          registros={diario.map((d) => ({
-            data: d.data,
-            paginas: d.consumo,
-            printer_id: {
-              id: impressora.id,
-              nome: impressora.nome,
-            },
-          }))}
-        />
-      </div>
-
-      {/* =========================
-          BORRÃO
-      ========================= */}
-      <EditarDescontoBorrao
-        id={impressora.id}
-        descontoInicial={impressora.desconto_borrao ?? 0}
+    {/* =========================
+        TABELA
+    ========================= */}
+    <div className="bg-white rounded-lg shadow max-h-105 overflow-y-auto">
+      <TabelaHistorico
+        registros={diario.map((d) => ({
+          data: d.data,
+          paginas: d.consumo,
+          printer_id: {
+            id: impressora.id,
+            nome: impressora.nome,
+          },
+        }))}
       />
-
-      {/* =========================
-          AÇÕES
-      ========================= */}
-      <div className="flex flex-wrap gap-4">
-        <Link
-          href={`/impressoras/${impressora.id}/editar`}
-          className="bg-green-600 text-white px-5 py-2 rounded shadow hover:bg-green-700 transition"
-        >
-          Editar impressora
-        </Link>
-
-        <Link
-          href={`/impressoras/substituir?origem=${impressora.id}`}
-          className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition"
-        >
-          Substituir impressora
-        </Link>
-      </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

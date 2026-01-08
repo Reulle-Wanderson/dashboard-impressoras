@@ -4,13 +4,18 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
+interface Props {
+  id: string;
+  descontoInicial: number;
+  esconderSalvar?: boolean;
+}
+
 export function EditarDescontoBorrao({
   id,
   descontoInicial,
-}: {
-  id: string;
-  descontoInicial: number;
-}) {
+  esconderSalvar = false,
+}: Props) {
+
   const [valor, setValor] = useState(descontoInicial);
   const [loading, setLoading] = useState(false);
 

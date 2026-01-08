@@ -91,8 +91,7 @@ export default function Dashboard() {
       });
     }
 
-    const media7dias = mediaMovel(valores, 7);
-
+    const media7dias = mediaMovel(valores, 7)
     setChartData({
       labels: labels.map((d) =>
         new Date(d).toLocaleDateString("pt-BR")
@@ -147,7 +146,7 @@ export default function Dashboard() {
             Impressora
           </label>
           <select
-            className="border rounded px-3 py-2 min-w-[220px]"
+            className="border rounded px-3 py-2 min-w-55"
             value={filters.printer || ""}
             onChange={(e) =>
               setFilters({ ...filters, printer: e.target.value || null })
