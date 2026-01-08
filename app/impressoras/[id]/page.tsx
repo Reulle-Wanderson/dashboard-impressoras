@@ -70,6 +70,10 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
   const [inicioCustom, setInicioCustom] = useState("");
   const [fimCustom, setFimCustom] = useState("");
 
+  // 🔒 detectar ambiente local
+  const podeSalvarBorrao =
+  process.env.NEXT_PUBLIC_SHOW_BORRAO_SAVE === "true";
+
   // ----------------------------------------
   // BUSCAR DADOS
   // ----------------------------------------
@@ -156,130 +160,125 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
   // JSX
   // ----------------------------------------
   return (
-  <section className="space-y-8">
-    {/* =========================
-        CABEÇALHO + AÇÕES
-    ========================= */}
-    <div className="bg-white p-6 rounded-lg shadow space-y-3">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">
-            {impressora.nome}
-          </h1>
-          <p className="text-sm text-gray-500">
-            IP: {impressora.ip} • Criada em{" "}
-            {new Date(impressora.created_at).toLocaleString("pt-BR")}
-          </p>
-        </div>
+    <section className="space-y-8">
+      {/* CABEÇALHO + AÇÕES */}
+      <div className="bg-white p-6 rounded-lg shadow space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              {impressora.nome}
+            </h1>
+            <p className="text-sm text-gray-500">
+              IP: {impressora.ip} • Criada em{" "}
+              {new Date(impressora.created_at).toLocaleString("pt-BR")}
+            </p>
+          </div>
 
-        <div className="flex gap-3">
-          <Link
-            href={`/impressoras/${impressora.id}/editar`}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          >
-            Editar
-          </Link>
-
-          <Link
-            href={`/impressoras/substituir?origem=${impressora.id}`}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Substituir
-          </Link>
-        </div>
-      </div>
-
-      {/* BORRÃO */}
-      <EditarDescontoBorrao
-        id={impressora.id}
-        descontoInicial={impressora.desconto_borrao ?? 0}
-      />
-    </div>
-
-    {/* =========================
-        FILTRO + GRÁFICO
-    ========================= */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* FILTROS */}
-      <div className="bg-white p-6 rounded-lg shadow space-y-4">
-        <h2 className="font-semibold text-gray-700">
-          Filtro de período
-        </h2>
-
-        <div className="space-y-3">
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-600">Período</label>
-            <select
-              value={tipoFiltro}
-              onChange={(e) => setTipoFiltro(e.target.value)}
-              className="border rounded px-3 py-2"
+          <div className="flex gap-3">
+            <Link
+              href={`/impressoras/${impressora.id}/editar`}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
             >
-              <option value="7">Últimos 7 dias</option>
-              <option value="30">Últimos 30 dias</option>
-              <option value="mes">Mês atual</option>
-              <option value="custom">Personalizado</option>
-            </select>
+              Editar
+            </Link>
+
+            <Link
+              href={`/impressoras/substituir?origem=${impressora.id}`}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Substituir
+            </Link>
           </div>
-
-          {tipoFiltro === "custom" && (
-            <>
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-600">
-                  Data início
-                </label>
-                <input
-                  type="date"
-                  className="border rounded px-3 py-2"
-                  value={inicioCustom}
-                  onChange={(e) => setInicioCustom(e.target.value)}
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-600">
-                  Data fim
-                </label>
-                <input
-                  type="date"
-                  className="border rounded px-3 py-2"
-                  value={fimCustom}
-                  onChange={(e) => setFimCustom(e.target.value)}
-                />
-              </div>
-            </>
-          )}
         </div>
 
-        <div className="pt-2 text-gray-700">
-          Total no período:
-          <div className="text-2xl font-bold text-blue-700">
-            {totalPeriodo.toLocaleString("pt-BR")}
+        {/* BORRÃO — salvar só no localhost */}
+        <EditarDescontoBorrao
+          id={impressora.id}
+          descontoInicial={impressora.desconto_borrao ?? 0}
+          esconderSalvar={!podeSalvarBorrao}
+        />
+      </div>
+
+      {/* FILTRO + GRÁFICO */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* FILTROS */}
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="font-semibold text-gray-700">
+            Filtro de período
+          </h2>
+
+          <div className="space-y-3">
+            <div className="flex flex-col">
+              <label className="text-sm text-gray-600">Período</label>
+              <select
+                value={tipoFiltro}
+                onChange={(e) => setTipoFiltro(e.target.value)}
+                className="border rounded px-3 py-2"
+              >
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="mes">Mês atual</option>
+                <option value="custom">Personalizado</option>
+              </select>
+            </div>
+
+            {tipoFiltro === "custom" && (
+              <>
+                <div className="flex flex-col">
+                  <label className="text-sm text-gray-600">
+                    Data início
+                  </label>
+                  <input
+                    type="date"
+                    className="border rounded px-3 py-2"
+                    value={inicioCustom}
+                    onChange={(e) => setInicioCustom(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-sm text-gray-600">
+                    Data fim
+                  </label>
+                  <input
+                    type="date"
+                    className="border rounded px-3 py-2"
+                    value={fimCustom}
+                    onChange={(e) => setFimCustom(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
           </div>
-          <span className="text-sm">páginas</span>
+
+          <div className="pt-2 text-gray-700">
+            Total no período:
+            <div className="text-2xl font-bold text-blue-700">
+              {totalPeriodo.toLocaleString("pt-BR")}
+            </div>
+            <span className="text-sm">páginas</span>
+          </div>
+        </div>
+
+        {/* GRÁFICO */}
+        <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
+          <LineChart chartData={chartData} />
         </div>
       </div>
 
-      {/* GRÁFICO */}
-      <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
-        <LineChart chartData={chartData} />
+      {/* TABELA */}
+      <div className="bg-white rounded-lg shadow max-h-105 overflow-y-auto">
+        <TabelaHistorico
+          registros={diario.map((d) => ({
+            data: d.data,
+            paginas: d.consumo,
+            printer_id: {
+              id: impressora.id,
+              nome: impressora.nome,
+            },
+          }))}
+        />
       </div>
-    </div>
-
-    {/* =========================
-        TABELA
-    ========================= */}
-    <div className="bg-white rounded-lg shadow max-h-105 overflow-y-auto">
-      <TabelaHistorico
-        registros={diario.map((d) => ({
-          data: d.data,
-          paginas: d.consumo,
-          printer_id: {
-            id: impressora.id,
-            nome: impressora.nome,
-          },
-        }))}
-      />
-    </div>
-  </section>
-);
+    </section>
+  );
 }
