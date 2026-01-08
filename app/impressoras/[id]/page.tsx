@@ -74,6 +74,12 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
   const podeSalvarBorrao =
   process.env.NEXT_PUBLIC_SHOW_BORRAO_SAVE === "true";
 
+  console.log(
+  "SHOW_BORRAO_SAVE",
+  process.env.NEXT_PUBLIC_SHOW_BORRAO_SAVE
+);
+
+
   // ----------------------------------------
   // BUSCAR DADOS
   // ----------------------------------------
@@ -155,7 +161,6 @@ export default function ImpressoraDetalhes({ params }: { params: any }) {
   if (loading || !impressora) {
     return <div className="p-6 text-gray-600">Carregando impressora...</div>;
   }
-
   // ----------------------------------------
   // JSX
   // ----------------------------------------
