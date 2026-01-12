@@ -24,7 +24,7 @@ export default function HistoricoCompraPapelPage() {
   const [loading, setLoading] = useState(true);
 
   // filtros
-  const [periodo, setPeriodo] = useState("30");
+  const [periodo, setPeriodo] = useState("all");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [fornecedoresSelecionados, setFornecedoresSelecionados] = useState<string[]>([]);
@@ -79,16 +79,18 @@ export default function HistoricoCompraPapelPage() {
   // =======================
   const filtrados = useMemo(() => {
     let inicio: Date | null = null;
-    let fim = new Date();
+    let fim: Date | null = null;
 
     if (periodo === "7") {
       inicio = new Date();
       inicio.setDate(inicio.getDate() - 7);
+      fim = new Date();
     }
 
     if (periodo === "30") {
       inicio = new Date();
       inicio.setDate(inicio.getDate() - 30);
+      fim = new Date();
     }
 
     if (periodo === "custom") {
@@ -100,7 +102,8 @@ export default function HistoricoCompraPapelPage() {
       const dataCompra = new Date(d.data);
 
       const passaPeriodo =
-        (!inicio || dataCompra >= inicio) && dataCompra <= fim;
+        (!inicio || dataCompra >= inicio) &&
+        (!fim || dataCompra <= fim);
 
       const passaFornecedor =
         fornecedoresSelecionados.length === 0 ||
@@ -116,33 +119,33 @@ export default function HistoricoCompraPapelPage() {
   // =======================
   // EXPORTAR EXCEL
   function exportarExcel() {
-  const headers = ["Data", "Páginas", "Valor (R$)", "Fornecedor"];
+    const headers = ["Data", "Páginas", "Valor (R$)", "Fornecedor"];
 
-  const rows = filtrados.map((d) => [
-    new Date(d.data).toLocaleDateString("pt-BR"),
-    d.quantidade_folhas,
-    d.valor_total.toFixed(2),
-    d.fornecedor ?? "",
-  ]);
+    const rows = filtrados.map((d) => [
+      new Date(d.data).toLocaleDateString("pt-BR"),
+      d.quantidade_folhas,
+      d.valor_total.toFixed(2),
+      d.fornecedor ?? "",
+    ]);
 
-  const csvContent = [
-    headers.join(";"),
-    ...rows.map((r) => r.join(";")),
-  ].join("\n");
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map((r) => r.join(";")),
+    ].join("\n");
 
-  const blob = new Blob(["\uFEFF" + csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
 
-  link.href = url;
-  link.download = "historico-compras-papel.csv";
-  link.click();
+    link.href = url;
+    link.download = "historico-compras-papel.csv";
+    link.click();
 
-  URL.revokeObjectURL(url);
-}
+    URL.revokeObjectURL(url);
+  }
 
   // =======================
   // EXPORTAR PDF
@@ -163,11 +166,13 @@ export default function HistoricoCompraPapelPage() {
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(
-        `Período: ${periodo === "30"
-          ? "Últimos 30 dias"
-          : periodo === "7"
-            ? "Últimos 7 dias"
-            : "Personalizado"
+        `Período: ${periodo === "all"
+          ? "Todas as datas"
+          : periodo === "30"
+            ? "Últimos 30 dias"
+            : periodo === "7"
+              ? "Últimos 7 dias"
+              : "Personalizado"
         }`,
         pageWidth / 2,
         33,
@@ -236,31 +241,31 @@ export default function HistoricoCompraPapelPage() {
   return (
     <section className="space-y-8">
       <div className="flex items-start justify-between gap-4">
-  <div>
-    <h1 className="text-3xl font-bold text-gray-800">
-      Histórico de compras de papel
-    </h1>
-    <p className="text-sm text-gray-500">
-      Registro detalhado de aquisições
-    </p>
-  </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Histórico de compras de papel
+          </h1>
+          <p className="text-sm text-gray-500">
+            Registro detalhado de aquisições
+          </p>
+        </div>
 
-  <div className="flex gap-2">
-    <button
-      onClick={exportarPDF}
-      className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition whitespace-nowrap"
-    >
-      Exportar PDF
-    </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportarPDF}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition whitespace-nowrap"
+          >
+            Exportar PDF
+          </button>
 
-    <button
-      onClick={exportarExcel}
-      className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition whitespace-nowrap"
-    >
-      Exportar Excel
-    </button>
-  </div>
-</div>
+          <button
+            onClick={exportarExcel}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition whitespace-nowrap"
+          >
+            Exportar Excel
+          </button>
+        </div>
+      </div>
 
 
       {/* FILTROS MINIMALISTAS */}
@@ -273,10 +278,12 @@ export default function HistoricoCompraPapelPage() {
               onChange={(e) => setPeriodo(e.target.value)}
               className="w-full border rounded-lg px-3 py-2 text-sm"
             >
+              <option value="all">Todas as datas</option>
               <option value="7">Últimos 7 dias</option>
               <option value="30">Últimos 30 dias</option>
               <option value="custom">Personalizado</option>
             </select>
+
           </div>
 
           {periodo === "custom" && (
